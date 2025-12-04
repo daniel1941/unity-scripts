@@ -10,6 +10,8 @@ param(
 )
 
 $Body = @{
+    "skip" = $null
+    "take" = $null
 } | ConvertTo-Json
 
 # Headers
@@ -48,5 +50,6 @@ $groupedData = $response | Group-Object { ([DateTime]$_.completedAt).Date }, lic
 }
 
 $groupedData | Sort-Object Date, @{Expression={$_.deviceName}; Descending=$false} | Format-Table Date, DeviceName, Count, @{Name="TotalAmount";Expression={$_.TotalAmount.ToString("F6")}}, @{Name="AverageAmount";Expression={$_.AverageAmount.ToString("F6")}} -AutoSize
+
 
 
