@@ -51,5 +51,34 @@ $groupedData = $response | Group-Object { ([DateTime]$_.completedAt).Date }, lic
 
 $groupedData | Sort-Object Date, @{Expression={$_.deviceName}; Descending=$false} | Format-Table Date, DeviceName, Count, @{Name="TotalAmount";Expression={$_.TotalAmount.ToString("F6")}}, @{Name="AverageAmount";Expression={$_.AverageAmount.ToString("F6")}} -AutoSize
 
+# Calculate and display totals
+$totalCount = ($groupedData | Measure-Object -Property Count -Sum).Sum
+$totalAmount = ($groupedData | Measure-Object -Property TotalAmount -Sum).Sum
+
+# Average per device
+$averagePerDevice = $groupedData | Group-Object DeviceName | ForEach-Object {
+    [PSCustomObject]@{
+        DeviceName = $_.Name
+        AverageAmount = ($_.Group | Measure-Object -Property TotalAmount -Average).Average
+    }
+}
+
+# Average per day
+$averagePerDay = $groupedData | Group-Object Date | ForEach-Object {
+    [PSCustomObject]@{
+        Date = $_.Name
+        AverageAmount = ($_.Group | Measure-Object -Property TotalAmount -Average).Average
+    }
+}
+
+Write-Host "`n=== Summary ===" -ForegroundColor Cyan
+Write-Host "Total Records: $totalCount"
+Write-Host "Total Amount: $($totalAmount.ToString("F6"))"
+
+Write-Host "`n=== Average Per Device ===" -ForegroundColor Yellow
+$averagePerDevice | Format-Table DeviceName, @{Name="AverageAmount";Expression={$_.AverageAmount.ToString("F6")}} -AutoSize
+
+Write-Host "`n=== Average Per Day ===" -ForegroundColor Yellow
+$averagePerDay | Format-Table Date, @{Name="AverageAmount";Expression={$_.AverageAmount.ToString("F6")}} -AutoSize
 
 
